@@ -1,0 +1,25 @@
+OBJS = tee_secpu_fw_loader.o
+
+ifeq ($(ARCH), arm64)
+TEEC_EXPORT=$(TDK_DIR)/ca_export_arm64
+endif
+
+ifeq ($(ARCH), arm)
+TEEC_EXPORT=$(TDK_DIR)/ca_export_arm
+endif
+
+CFLAGS += -Wall -I../ta/include -I$(TEEC_EXPORT)/include -I./include
+#Add/link other required libraries here
+LDADD += -lteec
+LIB = libtee_secpu_fw_loader.so
+
+.PHONY: all
+all: $(LIB)
+
+$(LIB): $(OBJS)
+	$(CC) $(LDADD) -fPIC -shared -o $@ $^
+
+.PHONY: clean
+clean:
+	rm -rf $(O)
+

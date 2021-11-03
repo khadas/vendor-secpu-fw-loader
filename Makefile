@@ -3,7 +3,7 @@ cur_dir=$(CURDIR)
 
 export ARCH?=arm
 export CROSS_COMPILE?=arm-linux-gnueabihf-
-export TA_CROSS_COMPILE=arm-linux-gnueabihf-
+export TA_CROSS_COMPILE?=arm-linux-gnueabihf-
 
 ifeq ($(PLATFORM_TDK_VERSION), 38)
 $(info TDK_VERSION_IS_$(PLATFORM_TDK_VERSION))
@@ -18,8 +18,8 @@ OUTPUT_DIR_LB = ../out/lib
 
 .PHONY: all
 all:
-	$(MAKE) -C lib O=$(OUTPUT_DIR_LB)
-	$(MAKE) -C ca O=$(OUTPUT_DIR_CA)
+	$(MAKE) -C lib O=$(OUTPUT_DIR_LB) CC=${CROSS_COMPILE}gcc
+	$(MAKE) -C ca O=$(OUTPUT_DIR_CA) CC=${CROSS_COMPILE}gcc
 
 .PHONY: clean
 clean:

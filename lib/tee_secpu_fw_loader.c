@@ -43,10 +43,10 @@ static int get_firmware_from_sys(char **firmware, char *fw_file, uint32_t *size)
 	long len = 0;
 
 	fp = fopen(fw_file, "r");
-    if (NULL == fp) {
-        printf("Open video firmware fail!\n");
-        return -1;
-    }
+	if (NULL == fp) {
+		printf("Open video firmware fail!\n");
+		return -1;
+	}
 
 	fseek(fp, 0, SEEK_END);
 	len = ftell(fp);
@@ -58,9 +58,9 @@ static int get_firmware_from_sys(char **firmware, char *fw_file, uint32_t *size)
 	}
 	buf = (char *)malloc(len);
 	if (NULL == buf) {
-        printf("no enough memory!\n");
+		printf("no enough memory!\n");
 		fclose(fp);
-        return -1;
+		return -1;
 	}
 
 	if (fread(buf, len, 1, fp) > 0)
@@ -79,10 +79,13 @@ static int get_firmware_from_sys(char **firmware, char *fw_file, uint32_t *size)
  */
 static int tee_session_load_init()
 {
-    TEEC_Result res;
+	TEEC_Result res;
 	TEEC_Operation op;
 	TEEC_UUID uuid = TA_SECPU_FW_LOADER_UUID;
 	uint32_t err_origin;
+
+	if (tee_inited)
+		return 0;
 
 	/* Initialize a context connecting us to the TEE */
 	memset(&op, 0, sizeof(TEEC_Operation));
@@ -94,7 +97,7 @@ static int tee_session_load_init()
 
 	/*Open a session to TA */
 	res = TEEC_OpenSession(&ctx, &sess, &uuid,
-			       TEEC_LOGIN_PUBLIC, NULL, NULL, &err_origin);
+			TEEC_LOGIN_PUBLIC, NULL, NULL, &err_origin);
 	if (res != TEEC_SUCCESS) {
 		printf("TEEC_Opensession failed with code 0x%x origin 0x%x\n",
 			res, err_origin);
@@ -114,13 +117,14 @@ static void tee_session_load_close()
 	/*
 	 * We're done with the TA, close the session and
 	 * destroy the context.
-    */
-    if (tee_inited == 1)
-    {
-	    TEEC_CloseSession(&sess);
-	    TEEC_FinalizeContext(&ctx);
+	 */
+	if (tee_inited == 1)
+	{
+		TEEC_CloseSession(&sess);
+		TEEC_FinalizeContext(&ctx);
+		tee_inited = 0;
 	} else {
-        printf("not init yet!!!\n");
+		printf("not init yet!!!\n");
 	}
 	if (buf) {
 		free(buf);
@@ -173,19 +177,62 @@ static int tee_fw_send_to_ta(char * fw_file, unsigned int debug)
 			res, err_origin);
 		return -1;
 	}
-    return 0;
+	return 0;
+}
+
+static int tee_get_load_status(unsigned int *status)
+{
+	TEEC_Operation op;
+	TEEC_Result res;
+	uint32_t err_origin;
+
+	if (tee_inited != 1) {
+		printf("tee session not inityet\n");
+		return -1;
+	}
+	if (!status)
+		return -2;
+
+	memset(&op, 0, sizeof(TEEC_Operation));
+	op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INOUT,
+					 TEEC_NONE, TEEC_NONE, TEEC_NONE);
+	op.params[0].value.a = 0;
+	op.params[0].value.b = 0;
+
+	res = TEEC_InvokeCommand(&sess, TA_CMD_GET_LOAD_STATUS, &op,
+				 &err_origin);
+	if (res != TEEC_SUCCESS) {
+		printf("TEEC_InvokeCommand failed with code 0x%x origin 0x%x\n",
+			res, err_origin);
+		return -1;
+	}
+	*status = op.params[0].value.a;
+	return 0;
 }
 
 
 //for external call
 int load_secpu_firmware(char * fw_file, unsigned int debug)
 {
-    int res;
-    res = tee_session_load_init();
-    if (res != 0)
-        return res;
+	int res;
+	res = tee_session_load_init();
+	if (res != 0)
+		return res;
 
-    res = tee_fw_send_to_ta(fw_file, debug);
-    tee_session_load_close();
+	res = tee_fw_send_to_ta(fw_file, debug);
+	tee_session_load_close();
+	return res;
+}
+
+//for external call
+int get_secpu_fw_load_status(unsigned int *status)
+{
+	int res;
+	res = tee_session_load_init();
+	if (res != 0)
+		return res;
+
+	res = tee_get_load_status(status);
+	tee_session_load_close();
 	return res;
 }

@@ -34,6 +34,12 @@
 
 /* The TAFs ID implemented in this TA */
 #define TA_CMD_LOAD_SECPU_FW    0
+#define TA_CMD_GET_LOAD_STATUS  1
 
+/** TA_CMD_GET_LOAD_STATUS status bits: */
+#define TA_SECPU_STATUS_BL2X_ATTEMPTED  0
+#define TA_SECPU_STATUS_BL2X_STARTED    1
+#define TA_SECPU_STATUS_REE_ATTEMPTED   2
+#define TA_SECPU_STATUS_REE_STARTED     3
 
 #endif /* TA_SECPU_FW_LOADER_H */

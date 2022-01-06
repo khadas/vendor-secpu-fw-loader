@@ -30,5 +30,7 @@
 /*fw_file point to fw bin*/
 int load_secpu_firmware(char * fw_file, unsigned int debug);
 
+int get_secpu_fw_load_status(unsigned int *status);
+
 #endif
 

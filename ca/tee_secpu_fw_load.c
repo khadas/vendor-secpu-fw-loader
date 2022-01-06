@@ -32,7 +32,7 @@
 int main(int argc, char **argv)
 {
 	int res = -1;
-	unsigned int debug = 0;
+	unsigned int status=0, debug = 0;
 	char* fw_path = "bl40.bin";
 
 	if (argc > 1) {
@@ -47,12 +47,19 @@ int main(int argc, char **argv)
 			fw_path = argv[2];
 	}
 
+	res = get_secpu_fw_load_status(&status);
+	printf("get_secpu_fw_load_status status=%#x res=%#x\n", status, res);
+
 	printf("fw_path=%s\n",fw_path);
 	res = load_secpu_firmware(fw_path, debug);
 	if (res == 0)
 		printf("tee load secpu fw ok\n");
 	else
 		printf("tee load secpu fw fail\n");
+
+	status = 0;
+	res = get_secpu_fw_load_status(&status);
+	printf("get_secpu_fw_load_status status=%#x res=%#x\n", status, res);
 
 	return res;
 }

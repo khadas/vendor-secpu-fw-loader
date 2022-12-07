@@ -18,8 +18,8 @@ OUTPUT_DIR_LB = ../out/lib
 
 .PHONY: all
 all:
-	$(MAKE) -C lib O=$(OUTPUT_DIR_LB) CC=${CROSS_COMPILE}gcc
-	$(MAKE) -C ca O=$(OUTPUT_DIR_CA) CC=${CROSS_COMPILE}gcc
+	$(MAKE) -C lib O=$(OUTPUT_DIR_LB)
+	$(MAKE) -C ca O=$(OUTPUT_DIR_CA)
 
 .PHONY: clean
 clean:
